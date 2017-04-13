@@ -14,7 +14,6 @@ import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v7.app.NotificationCompat;
-import android.widget.Toast;
 
 /**
  * Created by yashkv on 13/4/17.
@@ -67,7 +66,20 @@ public class NotifyService extends Service {
                     NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     manager.notify(0, builder.build());
                 } else if (networkInfo != null && networkInfo.getDetailedState() == NetworkInfo.DetailedState.DISCONNECTED) {
-                    Toast.makeText(getBaseContext(),"Disconnected",Toast.LENGTH_SHORT).show();
+
+                    NotificationCompat.Builder builder =
+                            (NotificationCompat.Builder) new NotificationCompat.Builder(NotifyService.this)
+                                    .setSmallIcon(R.drawable.notification_flat)
+                                    .setContentTitle("WiFi Disconnected");
+
+                    Intent notificationIntent = new Intent(NotifyService.this, WiFiName.class);
+                    PendingIntent contentIntent = PendingIntent.getActivity(NotifyService.this, 0, notificationIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
+                    builder.setContentIntent(contentIntent);
+
+                    // Add as notification
+                    NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    manager.notify(0, builder.build());
                 }
             }
         }
