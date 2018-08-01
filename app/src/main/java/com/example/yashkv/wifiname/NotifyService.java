@@ -1,5 +1,6 @@
 package com.example.yashkv.wifiname;
 
+import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -14,6 +15,8 @@ import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v7.app.NotificationCompat;
+
+import java.util.Calendar;
 
 /**
  * Created by yashkv on 13/4/17.
@@ -45,32 +48,24 @@ public class NotifyService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-                NetworkInfo networkInfo = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
+                ConnectivityManager connectivityManager = (ConnectivityManager)context
+                        .getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
                 if (networkInfo != null && networkInfo.getDetailedState() == NetworkInfo.DetailedState.CONNECTED) {
-                    final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-                    final WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                    String ssid = wifiInfo.getSSID();
 
-                    NotificationCompat.Builder builder =
-                            (NotificationCompat.Builder) new NotificationCompat.Builder(NotifyService.this)
-                                    .setSmallIcon(R.drawable.notification_flat)
-                                    .setContentTitle("WiFi Connected")
-                                    .setContentText(ssid);
+                    if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE){
+                        notifyMobileNetworkChange(context);
+                    }
+                    else {
+                        notifyWifiNetworkChange(context);
+                    }
 
-                    Intent notificationIntent = new Intent(NotifyService.this, WiFiName.class);
-                    PendingIntent contentIntent = PendingIntent.getActivity(NotifyService.this, 0, notificationIntent,
-                            PendingIntent.FLAG_UPDATE_CURRENT);
-                    builder.setContentIntent(contentIntent);
-
-                    // Add as notification
-                    NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                    manager.notify(0, builder.build());
                 } else if (networkInfo != null && networkInfo.getDetailedState() == NetworkInfo.DetailedState.DISCONNECTED) {
 
                     NotificationCompat.Builder builder =
                             (NotificationCompat.Builder) new NotificationCompat.Builder(NotifyService.this)
                                     .setSmallIcon(R.drawable.notification_flat)
-                                    .setContentTitle("WiFi Disconnected");
+                                    .setContentTitle("Network Disconnected");
 
                     Intent notificationIntent = new Intent(NotifyService.this, WiFiName.class);
                     PendingIntent contentIntent = PendingIntent.getActivity(NotifyService.this, 0, notificationIntent,
@@ -84,6 +79,34 @@ public class NotifyService extends Service {
             }
         }
     };
+
+    private void notifyMobileNetworkChange(Context context) {
+        //Run anything you want here
+        Intent dialogIntent = new Intent(this, WiFiName.class);
+        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(dialogIntent);
+    }
+
+    private void notifyWifiNetworkChange(Context context) {
+        final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        final WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        String ssid = wifiInfo.getSSID();
+
+        NotificationCompat.Builder builder =
+                (NotificationCompat.Builder) new NotificationCompat.Builder(NotifyService.this)
+                        .setSmallIcon(R.drawable.notification_flat)
+                        .setContentTitle("WiFi Connected")
+                        .setContentText(ssid);
+
+        Intent notificationIntent = new Intent(NotifyService.this, WiFiName.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(NotifyService.this, 0, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
+
+        // Add as notification
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(0, builder.build());
+    }
 
 
 }
