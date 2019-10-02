@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -18,6 +19,8 @@ import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+
+import java.util.List;
 
 /**
  * Created by yashkv on 13/4/17.
@@ -54,7 +57,8 @@ public class NotifyService extends Service {
                 ConnectivityManager connectivityManager = (ConnectivityManager)context
                         .getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-                if (networkInfo != null && networkInfo.getDetailedState() == NetworkInfo.DetailedState.CONNECTED) {
+                NetworkInfo nwInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                if (nwInfo != null && nwInfo.getDetailedState() == NetworkInfo.DetailedState.CONNECTED) {
 
                     if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE){
                         notifyMobileNetworkChange(context);
@@ -113,11 +117,25 @@ public class NotifyService extends Service {
     }
 
     private void notifyWifiNetworkChange(Context context) {
-        final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        final WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         final WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        String ssid = wifiInfo.getSSID();
+        String ssid = findSSIDForWifiInfo(wifiManager, wifiInfo);
 
         showNotificationMessage("WiFi Connected!", ssid);
+    }
+
+    public String findSSIDForWifiInfo(WifiManager manager, WifiInfo wifiInfo) {
+
+        List<WifiConfiguration> listOfConfigurations = manager.getConfiguredNetworks();
+
+        for (int index = 0; index < listOfConfigurations.size(); index++) {
+            WifiConfiguration configuration = listOfConfigurations.get(index);
+            if (configuration.networkId == wifiInfo.getNetworkId()) {
+                return configuration.SSID;
+            }
+        }
+
+        return null;
     }
 
 
