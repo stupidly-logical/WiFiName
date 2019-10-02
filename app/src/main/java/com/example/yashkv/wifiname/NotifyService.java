@@ -65,21 +65,8 @@ public class NotifyService extends Service {
 
                 } else if (networkInfo != null && networkInfo.getDetailedState() == NetworkInfo.DetailedState.DISCONNECTED) {
 
+                    showNotificationMessage("Network Disconnected", "");
 
-
-                    NotificationCompat.Builder builder =
-                            (NotificationCompat.Builder) new NotificationCompat.Builder(NotifyService.this)
-                                    .setSmallIcon(R.drawable.notification_flat)
-                                    .setContentTitle("Network Disconnected");
-
-                    Intent notificationIntent = new Intent(NotifyService.this, WiFiName.class);
-                    PendingIntent contentIntent = PendingIntent.getActivity(NotifyService.this, 0, notificationIntent,
-                            PendingIntent.FLAG_UPDATE_CURRENT);
-                    builder.setContentIntent(contentIntent);
-
-                    // Add as notification
-                    NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                    manager.notify(0, builder.build());
                 }
             }
         }
